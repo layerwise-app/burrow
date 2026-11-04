@@ -1,5 +1,6 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
 import { getRequestUrl } from '@tanstack/react-start/server';
+import { siteConfig } from '~/site.config';
 
 type Site = {
   name: string;
@@ -23,16 +24,24 @@ type Site = {
 
 /** What search engines and link previews read about this site. */
 export const site: Site = {
-  name: 'My App',
-  description: 'Built with Layerwise',
+  name: siteConfig.product,
+  description: siteConfig.description,
   url: '',
-  image: '',
-  imageAlt: '',
+  image: '/og/home.png',
+  imageAlt: `${siteConfig.product}: ${siteConfig.tagline}`,
   googleSiteVerification: ''
 };
 
-/** Public pages in `/sitemap.xml`. Add every page search engines should find. */
-export const sitemapPaths: string[] = ['/'];
+/**
+ * Public pages in `/sitemap.xml`. Add every page search engines should find.
+ * Each changelog release is added automatically from `src/content/changelog/`.
+ */
+export const sitemapPaths: string[] = ['/', '/changelog', '/privacy', '/terms'];
+
+/** Share image for a page, rendered by `pnpm og-images` into `public/og/`. */
+export function ogImage(name: string) {
+  return `/og/${name}.png`;
+}
 
 const requestOrigin = createIsomorphicFn()
   .server(() => getRequestUrl().origin)

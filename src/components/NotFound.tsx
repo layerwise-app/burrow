@@ -1,25 +1,44 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router';
+import { siteConfig } from '~/site.config';
 
-export function NotFound({ children }: { children?: any }) {
+/** The 404 page: `command not found: <path>`. */
+export function NotFound() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="space-y-2 p-2">
-      <div className="text-gray-600 dark:text-gray-400">
-        {children || <p>The page you are looking for does not exist.</p>}
-      </div>
-      <p className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => window.history.back()}
-          className="bg-emerald-500 text-white px-2 py-1 rounded-sm uppercase font-black text-sm"
-        >
-          Go back
-        </button>
-        <Link
-          to="/"
-          className="bg-cyan-600 text-white px-2 py-1 rounded-sm uppercase font-black text-sm"
-        >
-          Start Over
-        </Link>
+    <div className='page wrap notfound'>
+      <p className='page-cmd' aria-hidden='true'>
+        <span className='tone-hl'>$</span> {pathname}
       </p>
+      <h1 className='t-h1 notfound-title'>
+        <span className='t-dim'>zsh: </span>command not found: <span className='tone-warn notfound-path'>{pathname}</span>
+      </h1>
+      <p className='t-lede'>
+        There is no page here. Maybe it merged and got cleaned up, which is
+        what {siteConfig.product} would have done too.
+      </p>
+      <div className='notfound-try'>
+        <p className='t-dim'>try one of these instead:</p>
+        <ul>
+          <li>
+            <Link to='/' className='link'>
+              cd ~
+            </Link>
+            <span className='t-dim'>the home page and the terminal</span>
+          </li>
+          <li>
+            <Link to='/changelog' className='link'>
+              git log
+            </Link>
+            <span className='t-dim'>the changelog</span>
+          </li>
+          <li>
+            <Link to='/' hash='early-access' className='link'>
+              burrow cloud
+            </Link>
+            <span className='t-dim'>early access</span>
+          </li>
+        </ul>
+      </div>
     </div>
-  )
+  );
 }

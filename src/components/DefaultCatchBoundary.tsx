@@ -1,53 +1,30 @@
-import {
-  ErrorComponent,
-  Link,
-  rootRouteId,
-  useMatch,
-  useRouter,
-} from '@tanstack/react-router'
-import type { ErrorComponentProps } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router';
+import type { ErrorComponentProps } from '@tanstack/react-router';
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
-  const router = useRouter()
-  const isRoot = useMatch({
-    strict: false,
-    select: (state) => state.id === rootRouteId,
-  })
-
-  console.error(error)
+  const router = useRouter();
+  console.error(error);
 
   return (
-    <div className="min-w-0 flex-1 p-4 flex flex-col items-center justify-center gap-6">
-      <ErrorComponent error={error} />
-      <div className="flex gap-2 items-center flex-wrap">
-        <button
-          onClick={() => {
-            router.invalidate()
-          }}
-          className={`px-2 py-1 bg-gray-600 dark:bg-gray-700 rounded-sm text-white uppercase font-extrabold`}
-        >
-          Try Again
+    <div className='page wrap notfound'>
+      <p className='page-cmd' aria-hidden='true'>
+        <span className='tone-hl'>$</span> burrow up
+      </p>
+      <h1 className='t-h1'>
+        <span className='tone-warn'>!</span> something broke on our side
+      </h1>
+      <p className='t-lede'>
+        The page hit an error while loading. Trying again usually works; if it
+        does not, the home page will.
+      </p>
+      <div className='notfound-actions'>
+        <button type='button' className='btn' onClick={() => router.invalidate()}>
+          try again
         </button>
-        {isRoot ? (
-          <Link
-            to="/"
-            className={`px-2 py-1 bg-gray-600 dark:bg-gray-700 rounded-sm text-white uppercase font-extrabold`}
-          >
-            Home
-          </Link>
-        ) : (
-          <Link
-            to="/"
-            className={`px-2 py-1 bg-gray-600 dark:bg-gray-700 rounded-sm text-white uppercase font-extrabold`}
-            onClick={(e) => {
-              e.preventDefault()
-              window.history.back()
-            }}
-          >
-            Go Back
-          </Link>
-        )}
+        <Link to='/' className='link'>
+          cd ~
+        </Link>
       </div>
     </div>
-  )
+  );
 }

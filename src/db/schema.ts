@@ -1,87 +1,55 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-// Better Auth tables. After adding an auth plugin, run
-// `pnpm run auth:generate --yes`, copy only its new tables and columns from the
-// generated `auth-schema.ts` into this section, then delete that file.
+// Burrow is a public marketing site with no accounts, so there are no
+// authentication tables. Define tables here, then run
+// `pnpm run db:generate --name <what_changed>` and `pnpm run db:migrate`.
 
-export const user = sqliteTable('user', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  emailVerified: integer('email_verified', { mode: 'boolean' })
-    .notNull()
-    .default(false),
-  image: text('image'),
+/** One row per "Get Burrow Cloud early access" sign-up. */
+export const earlyAccessSignups = sqliteTable(
+  'early_access_signups',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    /** Lowercased and trimmed; unique, so the same email adds no second row. */
+    email: text('email').notNull().unique(),
+    githubUsername: text('github_username'),
+    /** One of `1`, `2-10`, `11-50`, `51+`. */
+    teamSize: text('team_size').notNull(),
+    /** When the owner was emailed about this sign-up; null if not emailed. */
+    ownerNotifiedAt: integer('owner_notified_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => [
+    index('early_access_signups_notified_idx').on(table.ownerNotifiedAt)
+  ]
+);
+
+/**
+ * Form submissions per visitor, for the 5-per-hour rate limit. `visitorHash`
+ * is a salted SHA-256 of the IP address; raw addresses are never stored.
+ * Rows older than a day are deleted as new submissions arrive.
+ */
+export const signupAttempts = sqliteTable(
+  'signup_attempts',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    visitorHash: text('visitor_hash').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+  },
+  (table) => [
+    index('signup_attempts_visitor_idx').on(table.visitorHash, table.createdAt),
+    index('signup_attempts_created_idx').on(table.createdAt)
+  ]
+);
+
+/** Values generated once per database, like the salt for visitor hashes. */
+export const appSecrets = sqliteTable('app_secrets', {
+  name: text('name').primaryKey(),
+  value: text('value').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  role: text('role'),
-  banned: integer('banned', { mode: 'boolean' }).default(false),
-  banReason: text('ban_reason'),
-  banExpires: integer('ban_expires', { mode: 'timestamp' })
+    .$defaultFn(() => new Date())
 });
-
-export const session = sqliteTable('session', {
-  id: text('id').primaryKey(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-  token: text('token').notNull().unique(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  impersonatedBy: text('impersonated_by')
-});
-
-export const account = sqliteTable('account', {
-  id: text('id').primaryKey(),
-  accountId: text('account_id').notNull(),
-  providerId: text('provider_id').notNull(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  idToken: text('id_token'),
-  accessTokenExpiresAt: integer('access_token_expires_at', {
-    mode: 'timestamp'
-  }),
-  refreshTokenExpiresAt: integer('refresh_token_expires_at', {
-    mode: 'timestamp'
-  }),
-  scope: text('scope'),
-  password: text('password'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
-});
-
-export const verification = sqliteTable('verification', {
-  id: text('id').primaryKey(),
-  identifier: text('identifier').notNull(),
-  value: text('value').notNull(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(
-    () => new Date()
-  ),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(
-    () => new Date()
-  )
-});
-
-// Define your own tables below, then run `pnpm run db:generate` to create a
-// migration. Migrations are applied to the production D1 database on publish.
-//
-// Example:
-//
-// export const posts = sqliteTable('posts', {
-//   id: integer('id').primaryKey({ autoIncrement: true }),
-//   title: text('title').notNull(),
-//   createdAt: integer('created_at', { mode: 'timestamp' })
-//     .notNull()
-//     .$defaultFn(() => new Date()),
-// });
