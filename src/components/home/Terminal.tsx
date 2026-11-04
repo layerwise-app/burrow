@@ -5,7 +5,14 @@ import { Box } from '~/components/tui/Box';
 import { Markup } from '~/components/tui/Text';
 import { terminal as script } from '~/content/terminal';
 import { latestRelease } from '~/lib/changelog';
-import { createClock, prefersReducedMotion, useInView, usePageVisible } from '~/lib/motion';
+import {
+  createClock,
+  prefersReducedMotion,
+  useInView,
+  usePageVisible,
+  useReducedMotion,
+  useSeen
+} from '~/lib/motion';
 import { complete, run } from '~/lib/terminal/engine';
 import type { Step, TerminalState } from '~/lib/terminal/types';
 
@@ -72,6 +79,12 @@ export function Terminal() {
 
   const inView = useInView(rootRef);
   const visible = usePageVisible();
+  // The intro waits until the terminal is at least half on screen, so nobody
+  // scrolls down to output that already finished. Reduced motion shows the
+  // finished output right away.
+  const seen = useSeen(rootRef, 0.5);
+  const reduced = useReducedMotion();
+  const startIntro = seen || reduced;
   const activeRef = useRef(false);
   activeRef.current = inView && visible;
 
@@ -186,6 +199,9 @@ export function Terminal() {
 
   // The intro: type the command at human speed, then stream its output.
   useEffect(() => {
+    if (!startIntro) return;
+    // Someone already used the terminal (it was focused with `/`): skip it.
+    if (historyRef.current.length > 0) return;
     const controller = new AbortController();
     const clock = createClock(() => activeRef.current, controller.signal);
     const wait = async (ms: number) => {
@@ -214,9 +230,9 @@ export function Terminal() {
     })();
 
     return () => controller.abort();
-    // Runs once on mount.
+    // Runs once, when the terminal is first seen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startIntro]);
 
   const updateCaret = () => {
     const el = inputRef.current;
@@ -329,65 +345,65 @@ export function Terminal() {
         aside={<span className='t-dim'>demo · runs in your browser</span>}
         bodyClassName='term-body'
       >
-        <div
-          ref={screenRef}
-          className='term-screen thin-scroll'
-          onClick={focusInput}
-        >
-          <div
-            ref={logRef}
-            role='log'
-            aria-live='polite'
-            aria-relevant='additions'
-            aria-busy={busy}
-            aria-label='Terminal output'
-          >
-            {lines.map((line) => (
-              <div key={line.id} className='term-line'>
-                <Markup text={line.text} />
-                {line.input !== undefined ? <span>{line.input}</span> : null}
-              </div>
-            ))}
-            {live !== null ? (
-              // Redrawn as a new line each frame, so the filling bar never counts as layout shift.
-              <div key={live} className='term-line' aria-hidden='true'>
-                <Markup text={live} />
-              </div>
-            ) : null}
-          </div>
-          <div ref={promptRef} className='term-line term-prompt'>
-            <span aria-hidden='true'>
-              {/* While a command runs there is no prompt, only the cursor. */}
-              {busy && typed === null ? null : <Markup text={script.prompt} />}
-              {busy && typed === null ? null : before}
-              {/* A new cursor per position: it moves by appearing, not by shifting. */}
-              <span key={`${busy && typed === null ? 'busy' : 'at'}-${cursorAt}`} className={cursorClass}>
-                {busy && typed === null ? ' ' : under}
+        {/* The frame holds the padding, so the scrolling area shows whole lines
+            only and no line sits half under the title. */}
+        <div className='term-frame' onClick={focusInput}>
+          <div ref={screenRef} className='term-screen thin-scroll'>
+            <div
+              ref={logRef}
+              role='log'
+              aria-live='polite'
+              aria-relevant='additions'
+              aria-busy={busy}
+              aria-label='Terminal output'
+            >
+              {lines.map((line) => (
+                <div key={line.id} className='term-line'>
+                  <Markup text={line.text} />
+                  {line.input !== undefined ? <span>{line.input}</span> : null}
+                </div>
+              ))}
+              {live !== null ? (
+                // Redrawn as a new line each frame, so the filling bar never counts as layout shift.
+                <div key={live} className='term-line' aria-hidden='true'>
+                  <Markup text={live} />
+                </div>
+              ) : null}
+            </div>
+            <div ref={promptRef} className='term-line term-prompt'>
+              <span aria-hidden='true'>
+                {/* While a command runs there is no prompt, only the cursor. */}
+                {busy && typed === null ? null : <Markup text={script.prompt} />}
+                {busy && typed === null ? null : before}
+                {/* A new cursor per position: it moves by appearing, not by shifting. */}
+                <span key={`${busy && typed === null ? 'busy' : 'at'}-${cursorAt}`} className={cursorClass}>
+                  {busy && typed === null ? ' ' : under}
+                </span>
+                {busy && typed === null ? null : after}
               </span>
-              {busy && typed === null ? null : after}
-            </span>
-            <input
-              ref={inputRef}
-              id={TERMINAL_INPUT_ID}
-              className='term-input'
-              aria-label='Type a burrow command, then press Enter. Try help.'
-              autoComplete='off'
-              autoCapitalize='off'
-              autoCorrect='off'
-              spellCheck={false}
-              enterKeyHint='send'
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                setCaret(e.target.selectionStart ?? e.target.value.length);
-                historyIndex.current = null;
-              }}
-              onKeyDown={onKeyDown}
-              onKeyUp={updateCaret}
-              onSelect={updateCaret}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-            />
+              <input
+                ref={inputRef}
+                id={TERMINAL_INPUT_ID}
+                className='term-input'
+                aria-label='Type a burrow command, then press Enter. Try help.'
+                autoComplete='off'
+                autoCapitalize='off'
+                autoCorrect='off'
+                spellCheck={false}
+                enterKeyHint='send'
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  setCaret(e.target.selectionStart ?? e.target.value.length);
+                  historyIndex.current = null;
+                }}
+                onKeyDown={onKeyDown}
+                onKeyUp={updateCaret}
+                onSelect={updateCaret}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+              />
+            </div>
           </div>
         </div>
       </Box>

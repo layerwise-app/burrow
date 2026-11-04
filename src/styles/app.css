@@ -62,9 +62,14 @@
 
 :root {
   color-scheme: dark;
+  /* Box-drawing frames join at 1.5; reading text gets more room (--lh-read). */
   --lh: 1.5;
+  --lh-read: 1.6;
   --fs-body: 15px;
+  /* Small type is for labels, the status bar, and code annotations only. */
   --fs-small: 13px;
+  /* Notes and footnotes are reading text: body size on desktop. */
+  --fs-note: var(--fs-body);
   /* 40/3 px makes each character exactly 8px wide, so block glyphs join cleanly. */
   --fs-term: calc(40px / 3);
   --pad-x: 2.5rem;
@@ -76,6 +81,7 @@
 @media (max-width: 1023.98px) {
   :root {
     --fs-body: 14.5px;
+    --fs-note: var(--fs-small);
     --pad-x: 1.5rem;
   }
 }
@@ -173,8 +179,10 @@
 .t-lede {
   max-width: 64ch;
   color: var(--ansi-white);
+  line-height: var(--lh-read);
   text-wrap: pretty;
 }
+
 
 .t-dim {
   color: var(--ansi-bright-black);
@@ -182,6 +190,13 @@
 
 .t-small {
   font-size: var(--fs-small);
+}
+
+/* Notes under a section, a chart, or a form: dim, and as readable as body text. */
+.t-note {
+  font-size: var(--fs-note);
+  line-height: var(--lh-read);
+  max-width: 72ch;
 }
 
 .t-label {

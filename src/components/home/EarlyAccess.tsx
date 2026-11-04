@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type * as React from 'react';
 import { Section } from '~/components/home/Section';
 import { Box } from '~/components/tui/Box';
-import { fillText } from '~/components/tui/Text';
+import { fillText, Markup } from '~/components/tui/Text';
 import { home } from '~/content/home';
 import { onPrefillTeamSize } from '~/lib/early-access';
 import { submitSignup } from '~/lib/signup.functions';
@@ -112,7 +112,6 @@ export function EarlyAccess() {
       <div className='ea'>
         <Box
           title='burrow cloud --early-access'
-          aside={<span className='t-dim'>free while in beta</span>}
           className='ea-box'
           bodyClassName='ea-body'
         >
@@ -265,7 +264,7 @@ export function EarlyAccess() {
                 <button className='btn' type='submit' disabled={status.kind === 'sending'}>
                   {status.kind === 'sending' ? content.sending : siteConfig.cta.submit}
                 </button>
-                <p className='t-small t-dim'>
+                <p className='t-note t-dim'>
                   {content.privacy.text}{' '}
                   <Link className='link' to='/privacy'>
                     {content.privacy.link}
@@ -296,7 +295,60 @@ export function EarlyAccess() {
             </form>
           )}
         </Box>
+        <CloudStatus status={status} />
       </div>
     </Section>
+  );
+}
+
+/** `burrow cloud status`: what happens after signing up. Its first row follows the form. */
+function CloudStatus({ status }: { status: Status }) {
+  const copy = content.status;
+  const done = status.kind === 'done' ? status : null;
+  return (
+    <Box
+      title={copy.title}
+      className='ea-status-box'
+      bodyClassName='ea-status-body'
+    >
+      <p className='ea-status-cmd'>
+        <span className='tone-hl' aria-hidden='true'>
+          ${' '}
+        </span>
+        {copy.command}
+      </p>
+      <p>
+        <Markup text={copy.heading} />
+      </p>
+      <dl className='ea-status-list'>
+        <div>
+          <dt>{copy.you.label}</dt>
+          <dd>
+            {done ? (
+              <>
+                <Markup text={done.result === 'ok' ? copy.you.ok : copy.you.duplicate} />{' '}
+                <b className='ea-status-email'>{done.email}</b>
+              </>
+            ) : (
+              <Markup text={copy.you.waiting} />
+            )}
+          </dd>
+        </div>
+        {copy.rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>
+              <Markup text={row.value} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p>
+        <Markup text={copy.footer} />
+      </p>
+      <p className='ea-status-prompt' aria-hidden='true'>
+        <span className='tone-hl'>$</span> <span className='term-cursor is-idle'> </span>
+      </p>
+    </Box>
   );
 }

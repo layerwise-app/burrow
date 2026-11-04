@@ -280,7 +280,7 @@ export const home = {
     id: 'early-access',
     label: 'early access',
     title: 'Burrow Cloud is in early access.',
-    lede: 'Hosted previews, PR checks, and share links without running anything yourself. We let a few teams in each week and write once when there is a seat for you. No newsletter.',
+    lede: 'Hosted previews, PR checks, and share links, without running anything yourself. Sign up once; `burrow cloud status` shows everything that happens after.',
     fields: {
       email: { label: 'email', placeholder: 'you@company.com' },
       github: {
@@ -297,6 +297,27 @@ export const home = {
           { value: '51+', label: '51+' }
         ]
       }
+    },
+    /** The `burrow cloud status` output beside the form: what happens after signing up. */
+    status: {
+      title: 'what happens next',
+      command: 'burrow cloud status',
+      heading: '{b:Burrow Cloud} {dim:· free while in beta}',
+      /** The first row follows the form: before, after, or a repeat sign-up. */
+      you: {
+        label: 'you',
+        waiting: '{dim:not on the list yet}',
+        ok: '{ok:✓ on the list} as',
+        duplicate: '{ok:✓ already on the list} as'
+      },
+      rows: [
+        { label: 'queue', value: 'a few teams a week, first in, first out' },
+        { label: 'email', value: 'one, with an invite link, when there is a seat' },
+        { label: 'then', value: 'run {b:burrow login}; your previews move to the cloud' },
+        { label: 'newsletter', value: 'none. no drip emails, no check-ins' },
+        { label: 'billing', value: 'nothing until you pick a plan' }
+      ],
+      footer: '{ok:✓} the CLI is free and works today'
     },
     sending: 'sending…',
     privacy: {

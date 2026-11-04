@@ -218,32 +218,48 @@ main:focus {
 .terminal {
   font-size: var(--fs-term);
   --bx-color: var(--ansi-white);
+  /* Output rows are a whole number of pixels tall, so scrolling to the end
+     lands exactly on a row and never shows a sliver of the line above. */
+  --term-lh: 20px;
+}
+
+@media (max-width: 639.98px) {
+  .terminal {
+    --term-lh: 19px;
+  }
 }
 
 .terminal .box-body.term-body {
   padding: 0;
 }
 
+/* The frame is padded; the screen inside scrolls and is a whole number of
+   lines tall, so scrolled output never shows a cut line under the title. */
+.term-frame {
+  padding: 0.75em 0 0.9em;
+  cursor: text;
+}
+
 .term-screen {
   position: relative;
   /* Tall enough for the whole intro (22 lines) without scrolling. */
-  height: calc(22 * 1.5em + 1.65em);
+  height: calc(22 * var(--term-lh));
+  line-height: var(--term-lh);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0.75em 1ch 0.9em;
-  cursor: text;
+  padding: 0 1ch;
 }
 
 @media (max-width: 639.98px) {
   .term-screen {
-    height: calc(18 * 1.5em + 1.65em);
+    height: calc(18 * var(--term-lh));
   }
 }
 
 .term-line {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  min-height: 1.5em;
+  min-height: var(--term-lh);
 }
 
 .term-prompt {
@@ -414,6 +430,19 @@ main:focus {
   outline: none;
 }
 
+/* Reading text in tables, lists, quotes, and prose gets roomier lines than
+   the 1.5 that box-drawing frames need. */
+.bt-cell:not(.bt-head),
+.plan-features li,
+.flow-note,
+.release-change-body,
+.legal p,
+.legal li,
+.ea-done p,
+.notfound-try li {
+  line-height: var(--lh-read);
+}
+
 /* ── How it works ─────────────────────────────────────────────────────── */
 
 .flow {
@@ -422,7 +451,7 @@ main:focus {
 
 .flow-diagram {
   margin: 0;
-  font-size: min(13.5px, calc(100cqw / (var(--cols) * 0.6)));
+  font-size: min(15px, calc(100cqw / (var(--cols) * 0.6)));
   line-height: 1.5;
   white-space: pre;
   color: var(--ansi-white);
@@ -441,10 +470,18 @@ main:focus {
 
 .flow-steps {
   display: grid;
-  grid-template-columns: repeat(5, calc(var(--box) * 1ch));
-  column-gap: calc(var(--gap) * 1ch);
+  /* Each note starts under its box and may use the gap after it. */
+  grid-template-columns:
+    repeat(4, calc((var(--box) + var(--gap)) * 1ch))
+    minmax(calc(var(--box) * 1ch), 1fr);
   margin-top: 1.25rem;
-  font-size: min(13.5px, calc(100cqw / (var(--cols) * 0.6)));
+  font-size: min(15px, calc(100cqw / (var(--cols) * 0.6)));
+}
+
+@media (min-width: 1024px) {
+  .flow-step {
+    padding-right: 2ch;
+  }
 }
 
 .flow-step-head {
@@ -460,6 +497,9 @@ main:focus {
   display: block;
   padding-left: 1ch;
   color: var(--ansi-white);
+  /* Reading text: body size even though the columns follow the diagram's grid. */
+  font-size: var(--fs-body);
+  text-wrap: pretty;
 }
 
 .flow-step[data-k] .flow-note {
@@ -953,7 +993,7 @@ html.js .bench[data-run='go'] .bench-value {
 .voice-text {
   color: var(--ansi-bright-white);
   font-size: 1.07em;
-  line-height: 1.55;
+  line-height: var(--lh-read);
   max-width: 46ch;
   text-wrap: pretty;
 }
@@ -1057,8 +1097,76 @@ html.js .bench[data-run='go'] .bench-value {
 
 /* ── Early access ─────────────────────────────────────────────────────── */
 
+/* Form and `burrow cloud status` side by side on desktop, on the hero's grid
+   (same columns at 1280 px and up), stacked on smaller screens. */
 .ea {
+  display: grid;
+  gap: 2rem;
   max-width: 48rem;
+}
+
+@media (min-width: 1024px) {
+  .ea {
+    max-width: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2.5rem 4rem;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ea {
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+  }
+}
+
+.ea-status-body.box-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.25rem 2ch 1.5rem;
+  line-height: var(--lh-read);
+}
+
+.ea-status-cmd {
+  color: var(--ansi-bright-white);
+}
+
+.ea-status-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ea-status-list > div {
+  display: grid;
+  grid-template-columns: 10ch minmax(0, 1fr);
+  column-gap: 2ch;
+}
+
+.ea-status-list dt {
+  color: var(--ansi-bright-black);
+}
+
+.ea-status-list dd {
+  color: var(--ansi-white);
+  text-wrap: pretty;
+}
+
+.ea-status-email {
+  overflow-wrap: anywhere;
+}
+
+/* The prompt waits at the bottom of the pane, like a terminal after output. */
+.ea-status-prompt {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  white-space: pre;
+}
+
+@media (max-width: 639.98px) {
+  .ea-status-list > div {
+    column-gap: 1.5ch;
+  }
 }
 
 .ea-body.box-body {

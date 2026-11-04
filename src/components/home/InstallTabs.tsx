@@ -108,7 +108,7 @@ export function InstallTabs() {
           </button>
         </div>
       ))}
-      <p className='install-note t-small t-dim'>{content.note}</p>
+      <p className='install-note t-note t-dim'>{content.note}</p>
       <span className='sr-only' role='status' aria-live='polite'>
         {copied !== null ? 'Install command copied to the clipboard' : ''}
       </span>

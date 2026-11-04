@@ -41,6 +41,35 @@ export function useInView(
   return inView;
 }
 
+/**
+ * True once at least `share` of the element is on screen, or, for an element
+ * taller than the viewport, once it fills that share of the viewport. Stays
+ * true after that.
+ */
+export function useSeen(ref: RefObject<Element | null>, share = 0.5) {
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const viewport = entry.rootBounds?.height ?? window.innerHeight;
+        if (
+          entry.intersectionRatio >= share ||
+          entry.intersectionRect.height >= viewport * share
+        ) {
+          setSeen(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, share]);
+  return seen;
+}
+
 /** Whether the tab is visible. */
 export function usePageVisible() {
   return useSyncExternalStore(

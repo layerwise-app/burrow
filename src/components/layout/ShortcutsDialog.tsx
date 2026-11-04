@@ -47,7 +47,7 @@ export function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () 
             ))}
           </tbody>
         </table>
-        <p className='keys-foot t-small t-dim'>
+        <p className='keys-foot t-note t-dim'>
           Shortcuts are off while you type in a field or the terminal.
         </p>
         <form method='dialog' className='keys-close'>

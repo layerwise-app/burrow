@@ -120,7 +120,7 @@ export function Benchmark() {
           </span>
           <span />
         </div>
-        <p className='bench-foot t-small t-dim'>
+        <p className='bench-foot t-note t-dim'>
           <Text>{content.footnote}</Text>
         </p>
       </figure>

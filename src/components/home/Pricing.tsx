@@ -29,7 +29,7 @@ function PlanCta({ plan }: { plan: Plan }) {
   }
   if ('footer' in plan) {
     return (
-      <p className='t-small'>
+      <p className='t-note'>
         <a className='link' href={plan.footerHref}>
           {plan.footer}
         </a>
@@ -94,7 +94,7 @@ export function Pricing() {
           </li>
         ))}
       </ul>
-      <p className='pricing-note t-small t-dim'>{content.note}</p>
+      <p className='pricing-note t-note t-dim'>{content.note}</p>
     </Section>
   );
 }
